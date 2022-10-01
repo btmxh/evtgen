@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import datetime
-import json
 import os.path
 
 from google.auth.transport.requests import Request
@@ -19,9 +18,6 @@ def main():
     Prints the start and name of the next 10 events on the user's calendar.
     """
     creds = None
-
-    with open('output.json', encoding='utf-8') as f:
-        events = json.load(f)
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
@@ -42,27 +38,20 @@ def main():
     try:
         service = build('calendar', 'v3', credentials=creds)
         batch = service.new_batch_http_request()
+        events_result = service.events().list(calendarId='primary',
+                                              singleEvents=True,
+                                              orderBy='startTime').execute()
+        events = events_result.get('items', [])
+
+        if not events:
+            print('No upcoming events found.')
+            return
+
+        # Prints the start and name of the next 10 events
         for event in events:
-            d = datetime.date.fromisoformat(event['date'])
-            t_from = datetime.time.fromisoformat(event['from'])
-            t_to = datetime.time.fromisoformat(event['to'])
-            dt_from = datetime.datetime.combine(d, t_from)
-            dt_to = datetime.datetime.combine(d, t_to)
-            meta = {
-                'summary': event['name'],
-                'description': 'generated',
-                'location': event['location'],
-                'start': {
-                    'dateTime': dt_from.isoformat(),
-                    'timeZone': 'Asia/Ho_Chi_Minh'
-                },
-                'end': {
-                    'dateTime': dt_to.isoformat(),
-                    'timeZone': 'Asia/Ho_Chi_Minh'
-                }
-            }
-            batch.add(service.events().insert(calendarId='primary', body=meta))
+            batch.add(service.events().delete(calendarId='primary', eventId=event['id']))
         batch.execute()
+
     except HttpError as error:
         print('An error occurred: %s' % error)
 

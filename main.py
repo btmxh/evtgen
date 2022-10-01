@@ -34,7 +34,7 @@ def parse_evt(row):
     time_to = time[1]
     weeks = parse_weeks(row[2])
     dates = [start_date + timedelta(days = (int(row[0]) - 2) + (week - 1) * 7) for week in weeks]
-    return [{'name': name, 'from': time_from, 'to': time_to, 'date': d.isoformat()} for d in dates]
+    return [{'name': name, 'from': time_from, 'to': time_to, 'date': d.isoformat(), 'location': row[3]} for d in dates]
 
 with open('output.json', 'w', encoding='utf-8') as out:
     evts = [evt for row in tt for evt in parse_evt(row)]
