@@ -1,2 +1,3 @@
-*.txt
+classmap.txt
+timetable.txt
 *.json
